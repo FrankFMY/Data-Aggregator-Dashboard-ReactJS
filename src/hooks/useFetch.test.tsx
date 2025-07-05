@@ -20,6 +20,7 @@ describe('useFetch', () => {
         expect(result.current.data).toEqual({ foo: 'bar' });
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBeNull();
+        expect(result.current.aborted).toBe(false);
     });
 
     it('обрабатывает ошибку ответа', async () => {
@@ -37,6 +38,7 @@ describe('useFetch', () => {
         expect(result.current.data).toBeNull();
         expect(result.current.loading).toBe(false);
         expect(result.current.error).toBeInstanceOf(Error);
+        expect(result.current.aborted).toBe(false);
     });
 
     it('отменяет запрос', async () => {
@@ -59,5 +61,6 @@ describe('useFetch', () => {
         });
         expect(abortSpy).toHaveBeenCalled();
         expect(result.current.loading).toBe(false);
+        expect(result.current.aborted).toBe(true);
     });
 });

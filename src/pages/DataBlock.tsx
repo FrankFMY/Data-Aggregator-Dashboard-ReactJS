@@ -1,7 +1,6 @@
 import { Error } from '../shared/Error';
 import { Skeleton } from '../shared/Skeleton';
 import { useAsync } from '../hooks/useAsync';
-import { useRetry } from '../hooks/useRetry';
 
 interface User {
     id: number;
@@ -130,11 +129,8 @@ function WeatherSummary({ weather }: { weather: Weather }) {
 
 export function DataBlock<T = unknown>({ label, fetcher }: DataBlockProps<T>) {
     const { loading, error, data, run, cancel } = useAsync<T, []>(fetcher);
-    // Для retry с backoff
-    const retryHook = useRetry(fetcher, 3, 500);
 
     const handleFetch = () => run();
-    const handleRetry = () => retryHook.run();
 
     // Форматирование данных по типу
     function renderData() {
@@ -170,11 +166,6 @@ export function DataBlock<T = unknown>({ label, fetcher }: DataBlockProps<T>) {
                         Загрузка...
                     </span>
                 )}
-                {retryHook.attempts > 1 && (
-                    <span className='ml-2 text-xs text-orange-500'>
-                        Попыток: {retryHook.attempts}
-                    </span>
-                )}
             </div>
             <div className='min-h-[64px] flex items-center justify-center w-full'>
                 {loading && <Skeleton height='2rem' />}
@@ -195,13 +186,6 @@ export function DataBlock<T = unknown>({ label, fetcher }: DataBlockProps<T>) {
                     className='px-4 py-1 rounded bg-yellow-500 text-white font-medium hover:bg-yellow-600 transition disabled:bg-gray-300 disabled:cursor-not-allowed'
                 >
                     Отменить
-                </button>
-                <button
-                    onClick={handleRetry}
-                    disabled={loading}
-                    className='px-4 py-1 rounded bg-green-600 text-white font-medium hover:bg-green-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed'
-                >
-                    Повторить (retry)
                 </button>
             </div>
         </div>

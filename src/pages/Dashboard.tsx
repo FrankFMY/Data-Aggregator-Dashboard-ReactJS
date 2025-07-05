@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { fetchUsers, fetchPosts } from '../api/jsonplaceholder';
 import { fetchWeather } from '../api/openweather';
 import { fetchCurrency } from '../api/exchangerate';
@@ -105,15 +105,14 @@ export const Dashboard = () => {
         { mode, retry: 2, timeout: 7000 }
     );
 
-    const handleSelect = (key: ApiKey) => {
+    const handleSelect = useCallback((key: ApiKey) => {
         setSelected((prev) =>
             prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
         );
-    };
+    }, []);
 
-    // Для отображения подробностей в модалке
-    const handleCardClick = (idx: number) => setModalIdx(idx);
-    const handleModalClose = () => setModalIdx(null);
+    const handleCardClick = useCallback((idx: number) => setModalIdx(idx), []);
+    const handleModalClose = useCallback(() => setModalIdx(null), []);
 
     return (
         <div className='min-h-screen flex flex-col items-center justify-center py-12 px-2 bg-gradient-to-br from-gray-100 to-blue-50 dark:from-gray-950 dark:to-gray-900'>

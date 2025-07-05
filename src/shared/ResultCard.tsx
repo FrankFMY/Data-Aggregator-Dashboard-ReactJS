@@ -19,7 +19,7 @@ const statusMap: Record<ResultStatus, { text: string; color: string }> = {
     aborted: { text: 'Отменено', color: 'bg-yellow-500 text-gray-900' },
 };
 
-export const ResultCard: React.FC<ResultCardProps> = ({
+const ResultCardComponent: React.FC<ResultCardProps> = ({
     icon,
     label,
     status,
@@ -50,3 +50,5 @@ export const ResultCard: React.FC<ResultCardProps> = ({
         </button>
     );
 };
+
+export const ResultCard = React.memo(ResultCardComponent);

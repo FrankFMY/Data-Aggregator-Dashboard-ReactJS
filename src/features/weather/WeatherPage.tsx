@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Skeleton } from '../../shared/Skeleton';
 import { Error as ErrorComponent } from '../../shared/Error';
 import { WeatherList } from './WeatherList';
 import type { WeatherData } from './WeatherList';
+import { usePersistentResource } from '../../hooks/usePersistentResource';
 
 const STORAGE_KEY = 'weather';
 
@@ -20,74 +20,49 @@ const CITIES = [
     { name: 'Ростов-на-Дону', lat: 47.23, lon: 39.72 },
 ];
 
-// Универсальный fetcher для одного города
-async function fetchWeatherForCity(lat: number, lon: number) {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('Ошибка загрузки погоды');
-    return res.json();
+async function fetchWeatherAll(): Promise<WeatherData[]> {
+    const results = await Promise.all(
+        CITIES.map(async (city) => {
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${city.lat}&longitude=${city.lon}&current_weather=true`;
+            const res = await fetch(url);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (!data.current_weather) return null;
+            const w: WeatherData = {
+                city: city.name,
+                temperature: data.current_weather.temperature,
+                description: `Погода: код ${data.current_weather.weathercode}`,
+                icon: undefined,
+                humidity: undefined,
+                wind: data.current_weather.windspeed,
+                weathercode: data.current_weather.weathercode,
+                winddirection: data.current_weather.winddirection,
+                is_day: data.current_weather.is_day,
+                time: data.current_weather.time,
+                timezone_abbreviation: data.timezone_abbreviation,
+                elevation: data.elevation,
+                latitude: data.latitude,
+                longitude: data.longitude,
+                utc_offset_seconds: data.utc_offset_seconds,
+                timezone: data.timezone,
+            };
+            return w;
+        })
+    );
+    return results.filter(Boolean) as WeatherData[];
 }
 
 const WeatherPage = () => {
-    const [weather, setWeather] = useState<WeatherData[] | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<Error | null>(null);
-
-    useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                setWeather(JSON.parse(saved));
-            } catch {
-                // ignore
-            }
-        }
-    }, []);
-
-    const loadWeather = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const results = await Promise.all(
-                CITIES.map(async (city) => {
-                    const data = await fetchWeatherForCity(city.lat, city.lon);
-                    if (!data.current_weather) return null;
-                    const w: WeatherData = {
-                        city: city.name,
-                        temperature: data.current_weather.temperature,
-                        description: `Погода: код ${data.current_weather.weathercode}`,
-                        icon: undefined,
-                        humidity: undefined,
-                        wind: data.current_weather.windspeed,
-                        weathercode: data.current_weather.weathercode,
-                        winddirection: data.current_weather.winddirection,
-                        is_day: data.current_weather.is_day,
-                        time: data.current_weather.time,
-                        timezone_abbreviation: data.timezone_abbreviation,
-                        elevation: data.elevation,
-                        latitude: data.latitude,
-                        longitude: data.longitude,
-                        utc_offset_seconds: data.utc_offset_seconds,
-                        timezone: data.timezone,
-                    };
-                    return w;
-                })
-            );
-            const filtered = results.filter(Boolean) as WeatherData[];
-            setWeather(filtered);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
-        } catch (e: unknown) {
-            if (e instanceof Error) setError(e);
-            else setError(new Error('Ошибка загрузки'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleClear = () => {
-        setWeather(null);
-        localStorage.removeItem(STORAGE_KEY);
-    };
+    const {
+        data: weather,
+        loading,
+        error,
+        load: loadWeather,
+        clear: handleClear,
+    } = usePersistentResource<WeatherData[]>({
+        storageKey: STORAGE_KEY,
+        fetcher: fetchWeatherAll,
+    });
 
     return (
         <div className='max-w-3xl mx-auto p-6'>

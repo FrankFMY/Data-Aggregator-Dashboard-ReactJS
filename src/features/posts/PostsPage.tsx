@@ -1,45 +1,35 @@
-import { useEffect, useState, useCallback } from 'react';
-import { fetchPosts } from '../../api/jsonplaceholder';
-import { useAsync } from '../../hooks/useAsync';
+import * as React from 'react';
+import { useCallback, useState } from 'react';
 import { Skeleton } from '../../shared/Skeleton';
 import { Error } from '../../shared/Error';
 import { PostsList } from './PostsList';
 import type { Post } from './PostsList';
 import { PostModal } from './PostModal';
+import { usePersistentResource } from '../../hooks/usePersistentResource';
 
 const STORAGE_KEY = 'posts';
 
+async function fetchPostsAll(): Promise<Post[]> {
+    const res = await fetch('https://dummyjson.com/posts');
+    if (!res.ok) throw new window.Error('Ошибка загрузки постов');
+    const data = await res.json();
+    return data.posts;
+}
+
 const PostsPage = () => {
-    const [posts, setPosts] = useState<Post[] | null>(null);
+    const {
+        data: posts,
+        loading,
+        error,
+        load: loadPosts,
+        clear: handleClear,
+    } = usePersistentResource<Post[]>({
+        storageKey: STORAGE_KEY,
+        fetcher: fetchPostsAll,
+    });
     const [selectedPost, setSelectedPost] = useState<Post | null>(null);
-    const { loading, error, data, run } = useAsync<Post[], []>(fetchPosts);
-
-    useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                setPosts(JSON.parse(saved));
-            } catch {
-                // ignore
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        if (data) {
-            setPosts(data);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-        }
-    }, [data]);
-
-    const handleClear = () => {
-        setPosts(null);
-        localStorage.removeItem(STORAGE_KEY);
-    };
-
-    // Закрытие модалки по ESC и клику вне окна
     const handleModalClose = useCallback(() => setSelectedPost(null), []);
-    useEffect(() => {
+    React.useEffect(() => {
         if (!selectedPost) return;
         const onKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Escape') handleModalClose();
@@ -47,9 +37,7 @@ const PostsPage = () => {
         document.addEventListener('keydown', onKeyDown);
         return () => document.removeEventListener('keydown', onKeyDown);
     }, [selectedPost, handleModalClose]);
-
-    // Клик вне окна
-    useEffect(() => {
+    React.useEffect(() => {
         if (!selectedPost) return;
         const onClick = (e: MouseEvent) => {
             const modal = document.querySelector('.post-modal-content');
@@ -58,14 +46,13 @@ const PostsPage = () => {
         document.addEventListener('mousedown', onClick);
         return () => document.removeEventListener('mousedown', onClick);
     }, [selectedPost, handleModalClose]);
-
     return (
         <div className='max-w-3xl mx-auto p-6'>
             <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6'>
                 <h1 className='text-2xl font-bold'>Посты</h1>
                 <div className='flex gap-2'>
                     <button
-                        onClick={() => run()}
+                        onClick={loadPosts}
                         disabled={loading}
                         className='px-4 py-2 rounded bg-blue-600 text-white font-medium hover:bg-blue-700 transition disabled:bg-gray-300 disabled:cursor-not-allowed'
                     >

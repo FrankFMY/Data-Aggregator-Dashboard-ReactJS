@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
 import { Skeleton } from '../../shared/Skeleton';
 import { Error as ErrorComponent } from '../../shared/Error';
 import { CurrencyList } from './CurrencyList';
 import type { CurrencyRate } from './CurrencyList';
+import { usePersistentResource } from '../../hooks/usePersistentResource';
 
 const STORAGE_KEY = 'currency';
 const CODES = [
@@ -13,56 +13,28 @@ const CODES = [
     { code: 'JPY', name: 'Японская иена' },
 ];
 
-async function fetchRates() {
+async function fetchRates(): Promise<CurrencyRate[]> {
     const res = await fetch('https://open.er-api.com/v6/latest/RUB');
     if (!res.ok) throw new Error('Ошибка загрузки курсов');
-    return res.json();
+    const data = await res.json();
+    return CODES.map(({ code, name }) => ({
+        code,
+        name,
+        rate: data.rates[code] ? 1 / data.rates[code] : NaN,
+    })).filter((r) => !isNaN(r.rate));
 }
 
-const GlobalError = window.Error;
-
 const CurrencyPage = () => {
-    const [rates, setRates] = useState<CurrencyRate[] | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<InstanceType<typeof GlobalError> | null>(
-        null
-    );
-
-    useEffect(() => {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-            try {
-                setRates(JSON.parse(saved));
-            } catch {
-                // intentionally ignored: некорректные данные в localStorage
-            }
-        }
-    }, []);
-
-    const loadRates = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const data = await fetchRates();
-            const ratesArr: CurrencyRate[] = CODES.map(({ code, name }) => ({
-                code,
-                name,
-                rate: data.rates[code] ? 1 / data.rates[code] : NaN,
-            })).filter((r) => !isNaN(r.rate));
-            setRates(ratesArr);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(ratesArr));
-        } catch (e: unknown) {
-            if (e instanceof GlobalError) setError(e);
-            else setError(new GlobalError('Ошибка загрузки'));
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleClear = () => {
-        setRates(null);
-        localStorage.removeItem(STORAGE_KEY);
-    };
+    const {
+        data: rates,
+        loading,
+        error,
+        load: loadRates,
+        clear: handleClear,
+    } = usePersistentResource<CurrencyRate[]>({
+        storageKey: STORAGE_KEY,
+        fetcher: fetchRates,
+    });
 
     return (
         <div className='max-w-3xl mx-auto p-6'>
