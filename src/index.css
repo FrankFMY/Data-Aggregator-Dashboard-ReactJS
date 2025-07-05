@@ -3,18 +3,17 @@
 @tailwind utilities;
 
 @layer base {
-    body {
-        @apply font-sans bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
-        font-family: 'Inter', system-ui, sans-serif;
-    }
+  body {
+    @apply font-sans bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
 }
 
 svg,
 img {
-    max-width: 100%;
-    max-height: 400px;
-    height: auto;
-    width: auto;
-    display: inline-block;
+  max-width: 100%;
+  max-height: 400px;
+  height: auto;
+  width: auto;
+  display: inline-block;
 }
-
