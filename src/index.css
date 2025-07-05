@@ -3,10 +3,11 @@
 @tailwind utilities;
 
 @layer base {
-  /* stylelint-disable-next-line at-rule-no-deprecated */
+  /* stylelint-disable at-rule-no-deprecated */
   body {
     @apply font-sans bg-gray-100 text-gray-900 dark:bg-gray-950 dark:text-gray-100;
   }
+  /* stylelint-enable at-rule-no-deprecated */
 }
 
 svg,
