@@ -1,5 +1,7 @@
 # 🚀 Data Aggregator Dashboard
 
+![CI](https://github.com/FrankFMY/Data-Aggregator-Dashboard-ReactJS/actions/workflows/ci.yml/badge.svg)
+
 **Data Aggregator Dashboard** — современный, многостраничный React-проект для агрегации и визуализации данных из публичных API. Максимум внимания архитектуре, UX, качеству кода, тестам и автоматизации.
 
 ---
