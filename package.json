@@ -13,8 +13,8 @@
     "test:coverage": "jest --coverage --reporters=default --reporters=jest-junit",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "stylelint": "stylelint \"src/**/*.{css,scss,ts,tsx}\"",
-    "stylelint:fix": "stylelint \"src/**/*.{css,scss,ts,tsx}\" --fix",
+    "stylelint": "stylelint \"src/**/*.{css,scss}\"",
+    "stylelint:fix": "stylelint \"src/**/*.{css,scss}\" --fix",
     "size": "size-limit"
   },
   "dependencies": {
